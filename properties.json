@@ -1,0 +1,12 @@
+{
+  "state": {
+    "state_on": true,
+    "mode": "auto"
+  },
+  "auto": [
+    {
+      "location": "home",
+      "code": 44
+    }
+  ]
+}
