@@ -105,13 +105,13 @@ def setLights(pin, brightness):
 def redTransition(r):
     while rCurrent < r:
         rDelta = r - rCurrent
-        rSteps = float(TRANSITIONFADETIME / (rDelta / TRANSITIONSTEPS))
+        rSteps = TRANSITIONFADETIME / (rDelta / TRANSITIONSTEPS)
         r = updateColor(r, +TRANSITIONSTEPS)
         setLights(RED_PIN, r)
         time.sleep(rSteps)
     while rCurrent > r:
         rDelta = rCurrent - r
-        rSteps = float(TRANSITIONFADETIME / (rDelta / TRANSITIONSTEPS))
+        rSteps = TRANSITIONFADETIME / (rDelta / TRANSITIONSTEPS)
         r = updateColor(r, -TRANSITIONSTEPS)
         setLights(RED_PIN, r)
         time.sleep(rSteps)
@@ -135,15 +135,19 @@ def greenTransition(g):
 def blueTransition(b):
     while bCurrent < b:
         bDelta = b - bCurrent
-        bSteps = float(TRANSITIONFADETIME / (bDelta / TRANSITIONSTEPS))
+        bSteps = float(int(TRANSITIONFADETIME) / (int(bDelta) / int(TRANSITIONSTEPS)))
         b = updateColor(b, +TRANSITIONSTEPS)
         setLights(BLUE_PIN, b)
+        print
+        bSteps
         time.sleep(bSteps)
     while bCurrent > b:
         bDelta = bCurrent - b
-        bSteps = float(TRANSITIONFADETIME / (bDelta / TRANSITIONSTEPS))
+        bSteps = float(int(TRANSITIONFADETIME) / (int(bDelta) / int(TRANSITIONSTEPS)))
         b = updateColor(b, -TRANSITIONSTEPS)
         setLights(BLUE_PIN, b)
+        print
+        bSteps
         time.sleep(bSteps)
 
 
