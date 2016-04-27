@@ -38,14 +38,10 @@ BLUE_PIN = 24
 
 # Number of color changes per step (more is faster, less is slower).
 # You also can use 0.X floats.
-TRANSITIONSTEPS = 30
+TRANSITIONSTEPS = 1
 TRANSITIONFADETIME = 1
-TRANSITIONTIME = TRANSITIONFADETIME / TRANSITIONSTEPS
 
 ###### END ######
-
-
-
 
 import os
 import sys
@@ -53,12 +49,26 @@ import termios
 import tty
 import pigpio
 import time
+import threading
+
 from thread import start_new_thread
 
 bright = 255
-r = 255.0
-g = 0.0
-b = 0.0
+
+total = len(sys.argv)
+arg1 = str(sys.argv[1])
+arg2 = str(sys.argv[2])
+arg3 = str(sys.argv[3])
+
+if total == 0:
+    r = 10
+    g = 10
+    b = 10
+else:
+    r = arg1
+    g = arg2
+    b = arg3
+
 
 # brightChanged = False
 # abort = False
@@ -68,16 +78,87 @@ pi = pigpio.pi()
 
 
 def setLights(pin, brightness):
+    global rCurrent
+    global gCurrent
+    global bCurrent
+
     realBrightness = int(int(brightness) * (float(bright) / 255.0))
     pi.set_PWM_dutycycle(pin, realBrightness)
 
+    if pin == RED_PIN:
+        rCurrent = realBrightness
+        print
+        "Setting red to: %s" % rCurrent
+    elif pin == GREEN_PIN:
+        gCurrent = realBrightness
+        print
+        "Setting green to: %s" % gCurrent
+    elif pin == BLUE_PIN:
+        bCurrent = realBrightness
+        print
+        "Setting blue to: %s" % bCurrent
+    else:
+        print
+        "No pin"
 
-def doTransition(r, g, b, TRANSITION):
-    try:
-        setLights(GREEN_PIN, bright)
-        setLights(BLUE_PIN, bright)
-        sleep(TRANSITIONTIME)
 
+def redTransition(r):
+    while rCurrent < r:
+        rDelta = r - rCurrent
+        rSteps = float(TRANSITIONFADETIME / (rDelta / TRANSITIONSTEPS))
+        r = updateColor(r, +TRANSITIONSTEPS)
+        setLights(RED_PIN, r)
+        time.sleep(rSteps)
+    while rCurrent > r:
+        rDelta = rCurrent - r
+        rSteps = float(TRANSITIONFADETIME / (rDelta / TRANSITIONSTEPS))
+        r = updateColor(r, -TRANSITIONSTEPS)
+        setLights(RED_PIN, r)
+        time.sleep(rSteps)
+
+
+def greenTransition(g):
+    while gCurrent < g:
+        gDelta = g - gCurrent
+        gSteps = float(TRANSITIONFADETIME / (gDelta / TRANSITIONSTEPS))
+        g = updateColor(g, +TRANSITIONSTEPS)
+        setLights(GREEN_PIN, g)
+        time.sleep(gSteps)
+    while gCurrent > g:
+        gDelta = gCurrent - g
+        gSteps = float(TRANSITIONFADETIME / (gDelta / TRANSITIONSTEPS))
+        g = updateColor(g, -TRANSITIONSTEPS)
+        setLights(GREEN_PIN, g)
+        time.sleep(gSteps)
+
+
+def blueTransition(b):
+    while bCurrent < b:
+        bDelta = b - bCurrent
+        bSteps = float(TRANSITIONFADETIME / (bDelta / TRANSITIONSTEPS))
+        b = updateColor(b, +TRANSITIONSTEPS)
+        setLights(BLUE_PIN, b)
+        time.sleep(bSteps)
+    while bCurrent > b:
+        bDelta = bCurrent - b
+        bSteps = float(TRANSITIONFADETIME / (bDelta / TRANSITIONSTEPS))
+        b = updateColor(b, -TRANSITIONSTEPS)
+        setLights(BLUE_PIN, b)
+        time.sleep(bSteps)
+
+
+def doTransition(r, g, b):
+    redthread = threading.Thread(target=redTransition(r))
+    greenthread = threading.Thread(target=greenTransition(g))
+    bluethread = threading.Thread(target=blueTransition(b))
+
+    redthread.start()
+    greenthread.start()
+    bluethread.start()
+
+    redthread.join()
+    greenthread.join()
+    bluethread.join()
 
 def updateColor(color, step):
     color += step
@@ -93,7 +174,7 @@ def updateColor(color, step):
 setLights(RED_PIN, r)
 setLights(GREEN_PIN, g)
 setLights(BLUE_PIN, b)
-
-time.sleep(0.5)
+time.sleep(2)
+doTransition(103, 100, 60)
 
 pi.stop()
