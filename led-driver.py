@@ -32,15 +32,15 @@
 ###### CONFIGURE THIS ######
 
 # The Pins. Use Broadcom numbers.
-RED_PIN   = 17
+RED_PIN = 17
 GREEN_PIN = 22
-BLUE_PIN  = 24
+BLUE_PIN = 24
 
 # Number of color changes per step (more is faster, less is slower).
 # You also can use 0.X floats.
 TRANSITIONSTEPS = 30
-TRANSITIONFADETIME  = 1
-TRANSITIONTIME = TRANSITIONFADETIME/TRANSITIONSTEPS
+TRANSITIONFADETIME = 1
+TRANSITIONTIME = TRANSITIONFADETIME / TRANSITIONSTEPS
 
 ###### END ######
 
@@ -71,11 +71,13 @@ def setLights(pin, brightness):
     realBrightness = int(int(brightness) * (float(bright) / 255.0))
     pi.set_PWM_dutycycle(pin, realBrightness)
 
+
 def doTransition(r, g, b, TRANSITION):
     try:
         setLights(GREEN_PIN, bright)
         setLights(BLUE_PIN, bright)
         sleep(TRANSITIONTIME)
+
 
 def updateColor(color, step):
     color += step
@@ -86,6 +88,7 @@ def updateColor(color, step):
         return 0
 
     return color
+
 
 setLights(RED_PIN, r)
 setLights(GREEN_PIN, g)
