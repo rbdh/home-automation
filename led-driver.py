@@ -51,8 +51,6 @@ import pigpio
 import time
 import threading
 
-from thread import start_new_thread
-
 bright = 255
 
 total = len(sys.argv)
@@ -95,7 +93,7 @@ def setLights(pin, brightness):
         bCurrent = realBrightness
         print("Setting blue to: %s" % bCurrent)
     else:
-        print("No pin")
+        print("No pin!")
 
 
 def redTransition(r):
