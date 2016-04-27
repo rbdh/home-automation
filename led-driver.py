@@ -38,8 +38,8 @@ BLUE_PIN = 24
 
 # Number of color changes per step (more is faster, less is slower).
 # You also can use 0.X floats.
-TRANSITIONSTEPS = 1
-TRANSITIONFADETIME = 1
+global TRANSITIONSTEPS = 1
+global TRANSITIONFADETIME = 1
 
 ###### END ######
 
@@ -87,19 +87,15 @@ def setLights(pin, brightness):
 
     if pin == RED_PIN:
         rCurrent = realBrightness
-        print
-        "Setting red to: %s" % rCurrent
+        print("Setting red to: %s" % rCurrent)
     elif pin == GREEN_PIN:
         gCurrent = realBrightness
-        print
-        "Setting green to: %s" % gCurrent
+        print("Setting green to: %s" % gCurrent)
     elif pin == BLUE_PIN:
         bCurrent = realBrightness
-        print
-        "Setting blue to: %s" % bCurrent
+        print("Setting blue to: %s" % bCurrent)
     else:
-        print
-        "No pin"
+        print("No pin")
 
 
 def redTransition(r):
