@@ -117,7 +117,7 @@ def redTransition(r):
             setLights(RED_PIN, rUpdate)
             time.sleep(rSteps)
     else:
-        print("DONE!")
+        print("RED DONE!")
 
 def greenTransition(g):
     gDelta = 1 + abs(gCurrent - g)
@@ -133,7 +133,7 @@ def greenTransition(g):
             setLights(GREEN_PIN, gUpdate)
             time.sleep(gSteps)
     else:
-        print("DONE!")
+        print("GREEN DONE!")
         
 def blueTransition(b):
     bDelta = 1 + abs(bCurrent - b)
@@ -151,7 +151,7 @@ def blueTransition(b):
             # print("%s %s %s" % (b, bSteps, bUpdate))
             time.sleep(bSteps)
     else:
-        print("DONE!")
+        print("BLUE DONE!")
 
 
 def doTransition(r, g, b):
