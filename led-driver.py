@@ -50,6 +50,14 @@ import tty
 import pigpio
 import time
 import threading
+import _json
+
+def loadSetting():
+    data = []
+    with open('properties.json') as f:
+        for line in f:
+            data.append(json.loads(line))
+    pprint(data["state_on"])
 
 class FuncThread(threading.Thread):
     def __init__(self, target, *args):
@@ -81,6 +89,7 @@ else:
 # state = True
 
 pi = pigpio.pi()
+
 
 
 def setLights(pin, brightness):
@@ -182,5 +191,6 @@ setLights(GREEN_PIN, 255)
 setLights(BLUE_PIN, 255)
 time.sleep(1)
 doTransition(r, g, b)
+loadSetting()
 
 pi.stop()
