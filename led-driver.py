@@ -38,8 +38,8 @@ BLUE_PIN = 24
 
 # Number of color changes per step (more is faster, less is slower).
 # You also can use 0.X floats.
-global TRANSITIONSTEPS = 1
-global TRANSITIONFADETIME = 1
+TRANSITIONSTEPS = 1
+TRANSITIONFADETIME = 1
 
 ###### END ######
 
@@ -99,14 +99,14 @@ def setLights(pin, brightness):
 def redTransition(r):
     while rCurrent < r:
         rDelta = r - rCurrent
-        rSteps = TRANSITIONFADETIME / (rDelta / TRANSITIONSTEPS)
-        r = updateColor(r, +TRANSITIONSTEPS)
+        rSteps = 1 / (rDelta / 1)
+        r = updateColor(r, +1)
         setLights(RED_PIN, r)
         time.sleep(rSteps)
     while rCurrent > r:
         rDelta = rCurrent - r
-        rSteps = TRANSITIONFADETIME / (rDelta / TRANSITIONSTEPS)
-        r = updateColor(r, -TRANSITIONSTEPS)
+        rSteps = 1 / (rDelta / 1)
+        r = updateColor(r, -1)
         setLights(RED_PIN, r)
         time.sleep(rSteps)
 
@@ -114,14 +114,14 @@ def redTransition(r):
 def greenTransition(g):
     while gCurrent < g:
         gDelta = g - gCurrent
-        gSteps = float(TRANSITIONFADETIME / (gDelta / TRANSITIONSTEPS))
-        g = updateColor(g, +TRANSITIONSTEPS)
+        gSteps = float(1 / (gDelta / 1))
+        g = updateColor(g, +1)
         setLights(GREEN_PIN, g)
         time.sleep(gSteps)
     while gCurrent > g:
         gDelta = gCurrent - g
-        gSteps = float(TRANSITIONFADETIME / (gDelta / TRANSITIONSTEPS))
-        g = updateColor(g, -TRANSITIONSTEPS)
+        gSteps = float(1 / (gDelta / 1))
+        g = updateColor(g, -1)
         setLights(GREEN_PIN, g)
         time.sleep(gSteps)
 
@@ -129,19 +129,17 @@ def greenTransition(g):
 def blueTransition(b):
     while bCurrent < b:
         bDelta = b - bCurrent
-        bSteps = float(int(TRANSITIONFADETIME) / (int(bDelta) / int(TRANSITIONSTEPS)))
-        b = updateColor(b, +TRANSITIONSTEPS)
+        bSteps = float(1) / (float(int(bDelta)) / float(1))
+        b = updateColor(b, +1)
         setLights(BLUE_PIN, b)
-        print
-        bSteps
+        print("%s %s" % (bDelta, bSteps))
         time.sleep(bSteps)
     while bCurrent > b:
         bDelta = bCurrent - b
-        bSteps = float(int(TRANSITIONFADETIME) / (int(bDelta) / int(TRANSITIONSTEPS)))
-        b = updateColor(b, -TRANSITIONSTEPS)
+        bSteps = float(1) / (float(int(bDelta)) / float(1))
+        b = updateColor(b, -1)
         setLights(BLUE_PIN, b)
-        print
-        bSteps
+        print("%s %s" % (bDelta, bSteps))
         time.sleep(bSteps)
 
 
