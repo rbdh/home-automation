@@ -24,8 +24,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>
 #
-
-
 # This script needs running pigpio (http://abyz.co.uk/rpi/pigpio/)
 
 
@@ -39,6 +37,7 @@ BLUE_PIN = 24
 # Number of color changes per step (more is faster, less is slower).
 # You also can use 0.X floats.
 TRANSITIONSTEPS = 1
+FADESTEPS = 1
 TRANSITIONFADETIME = 1
 
 ###### END ######
@@ -50,14 +49,13 @@ import tty
 import pigpio
 import time
 import threading
-import _json
+import json
 
 def loadSetting():
     data = []
     with open('properties.json') as f:
-        for line in f:
-            data.append(json.loads(line))
-    pprint(data["state_on"])
+        data.append(json.loads(f))
+    print(data["state_on"])
 
 class FuncThread(threading.Thread):
     def __init__(self, target, *args):
@@ -74,19 +72,14 @@ arg2 = int(str(sys.argv[2]))
 arg3 = int(str(sys.argv[3]))
 bright = 255
 
-if total == 0:
-    r = 10
-    g = 10
-    b = 10
-else:
-    r = arg1
-    g = arg2
-    b = arg3
-
-
-# brightChanged = False
-# abort = False
-# state = True
+# if total == 0:
+#     r = 10
+#     g = 10
+#     b = 10
+# else:
+r = arg1
+g = arg2
+b = arg3
 
 pi = pigpio.pi()
 
@@ -114,7 +107,7 @@ def setLights(pin, brightness):
 
 def redTransition(r):
     rDelta = 1 + abs(rCurrent - r)
-    rSteps = float(TRANSITIONFADETIME) / (float(int(rDelta)) / float(1))
+    rSteps = float(TRANSITIONFADETIME) / (float(rDelta) / float(1))
     while rCurrent < r:
         for i in range(0, rDelta):
             rUpdate = updateColor(rCurrent, +TRANSITIONSTEPS)
@@ -130,7 +123,7 @@ def redTransition(r):
 
 def greenTransition(g):
     gDelta = 1 + abs(gCurrent - g)
-    gSteps = float(TRANSITIONFADETIME) / (float(int(gDelta)) / float(1))
+    gSteps = float(TRANSITIONFADETIME) / (float(gDelta) / float(1))
     while gCurrent < g:
         for i in range(0, gDelta):
             gUpdate = updateColor(gCurrent, +TRANSITIONSTEPS)
@@ -146,7 +139,7 @@ def greenTransition(g):
         
 def blueTransition(b):
     bDelta = 1 + abs(bCurrent - b)
-    bSteps = float(TRANSITIONFADETIME) / (float(int(bDelta)) / float(1))
+    bSteps = float(TRANSITIONFADETIME) / (float(bDelta) / float(1))
     while bCurrent < b:
         for i in range(0, bDelta):
             bUpdate = updateColor(bCurrent, +TRANSITIONSTEPS)
@@ -186,11 +179,42 @@ def updateColor(color, step):
     return color
 
 
-setLights(RED_PIN, 255)
-setLights(GREEN_PIN, 255)
-setLights(BLUE_PIN, 255)
-time.sleep(1)
+def fadeColor(state):
+    while state == True:
+        print("Red %s, Green %s, Blue %s" % (rCurrent, gCurrent, bCurrent))
+        if rCurrent == 255 and bCurrent == 0 and gCurrent < 255:
+            doTransition(255, 255, 0)
+
+
+        elif gCurrent == 255 and bCurrent == 0 and rCurrent > 0:
+            doTransition(0, 255, 0)
+
+
+        elif rCurrent == 0 and gCurrent == 255 and bCurrent < 255:
+            doTransition(0, 255, 255)
+
+
+        elif rCurrent == 0 and bCurrent == 255 and gCurrent > 0:
+            doTransition(0, 0, 255)
+
+
+        elif gCurrent == 0 and bCurrent == 255 and rCurrent < 255:
+            doTransition(255, 0, 255)
+
+
+        elif rCurrent == 255 and gCurrent == 0 and bCurrent > 0:
+            doTransition(255, 0, 0)
+
+
+        elif rCurrent == 0 and bCurrent == 0 and gCurrent == 0:
+            setLights(RED_PIN, 255.0)
+
+
+setLights(RED_PIN, 0)
+setLights(GREEN_PIN, 0)
+setLights(BLUE_PIN, 0)
 doTransition(r, g, b)
-loadSetting()
+time.sleep(2)
+fadeColor(True)
 
 pi.stop()

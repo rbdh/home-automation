@@ -1,1 +1,6 @@
-{"state_on": true,"mode": "auto","lastColor": "#3BE9AC"}
+{
+  "state_on": true,
+  "mode": "auto",
+  "brightness": 255,
+  "lastColor": "#3BE9AC"
+}
