@@ -51,11 +51,38 @@ import time
 import threading
 import json
 
+
 def loadSetting():
-    data = []
-    with open('properties.json') as f:
-        data.append(json.loads(f))
-    print(data["state_on"])
+    global STATE
+    global MODE
+    global BRIGHTNESS
+    global LASTCOLOR
+
+    print("will open file for reading")
+    with open('properties.json', 'r') as f:
+        parsed_properties = json.load(f)
+        STATE = parsed_properties['state']
+        MODE = parsed_properties['mode']
+        BRIGHTNESS = parsed_properties['brightness']
+        LASTCOLOR = parsed_properties['lastColor']
+
+        print("State {}\nMode {}\nBrightness {}\nlastcolor {}".format(STATE, MODE, BRIGHTNESS, LASTCOLOR))
+        # updateSetting(STATE, MODE, BRIGHTNESS, LASTCOLOR)
+
+
+def updateSetting(stateUpdate, modeUpdate, brightUpdate, lcolorUpdate):
+    if not stateUpdate and modeUpdate and brightUpdate and lcolorUpdate:
+        print("No updates done!")
+    else:
+        print("will open file for writing")
+        with open('properties.json', 'w') as f:
+            parsed_properties2 = json.load(f)
+            parsed_properties2['state'] = stateUpdate
+            parsed_properties2['mode'] = modeUpdate
+            parsed_properties2['brightness'] = brightUpdate
+            parsed_properties2['lastColor'] = lcolorUpdate
+            json.dump(parsed_properties2, f)
+
 
 class FuncThread(threading.Thread):
     def __init__(self, target, *args):
@@ -157,16 +184,23 @@ def blueTransition(b):
 
 
 def doTransition(r, g, b):
-    redthread = FuncThread(redTransition, r)
-    greenthread = FuncThread(greenTransition, g)
-    bluethread = FuncThread(blueTransition, b)
+    if STATE == "true":
+        redthread = FuncThread(redTransition, r)
+        greenthread = FuncThread(greenTransition, g)
+        bluethread = FuncThread(blueTransition, b)
 
-    redthread.start()
-    greenthread.start()
-    bluethread.start()
-    redthread.join()
-    greenthread.join()
-    bluethread.join()
+        redthread.start()
+        greenthread.start()
+        bluethread.start()
+        redthread.join()
+        greenthread.join()
+        bluethread.join()
+    else:
+        print("State is OFFLINE")
+        setLights(RED_PIN, 0)
+        setLights(GREEN_PIN, 0)
+        setLights(BLUE_PIN, 0)
+        doFeedback(false)
 
 def updateColor(color, step):
     color += step
@@ -178,41 +212,57 @@ def updateColor(color, step):
 
     return color
 
+def doFeedback(validity):
+    if validity == "true":
+        setLights(GREEN_PIN, 255)
+        time.sleep(0.1)
+        setLights(GREEN_PIN, 0)
+        time.sleep(0.1)
+        setLights(GREEN_PIN, 255)
+        time.sleep(0.1)
+        setLights(GREEN_PIN, 0)
+        time.sleep(0.1)
+        setLights(GREEN_PIN, 255)
+        time.sleep(0.1)
+        setLights(GREEN_PIN, 0)
+    else:
+        setLights(RED_PIN, 255)
+        time.sleep(0.1)
+        setLights(RED_PIN, 0)
+        time.sleep(0.1)
+        setLights(RED_PIN, 255)
+        time.sleep(0.1)
+        setLights(RED_PIN, 0)
+        time.sleep(0.1)
+        setLights(RED_PIN, 255)
+        time.sleep(0.1)
+        setLights(RED_PIN, 0)
 
 def fadeColor(state):
-    while state == True:
+    while state == True and STATE == "true":
         print("Red %s, Green %s, Blue %s" % (rCurrent, gCurrent, bCurrent))
         if rCurrent == 255 and bCurrent == 0 and gCurrent < 255:
             doTransition(255, 255, 0)
 
-
         elif gCurrent == 255 and bCurrent == 0 and rCurrent > 0:
             doTransition(0, 255, 0)
-
 
         elif rCurrent == 0 and gCurrent == 255 and bCurrent < 255:
             doTransition(0, 255, 255)
 
-
         elif rCurrent == 0 and bCurrent == 255 and gCurrent > 0:
             doTransition(0, 0, 255)
-
 
         elif gCurrent == 0 and bCurrent == 255 and rCurrent < 255:
             doTransition(255, 0, 255)
 
-
         elif rCurrent == 255 and gCurrent == 0 and bCurrent > 0:
             doTransition(255, 0, 0)
-
 
         elif rCurrent == 0 and bCurrent == 0 and gCurrent == 0:
             setLights(RED_PIN, 255.0)
 
 
-setLights(RED_PIN, 0)
-setLights(GREEN_PIN, 0)
-setLights(BLUE_PIN, 0)
 doTransition(r, g, b)
 time.sleep(2)
 fadeColor(True)
