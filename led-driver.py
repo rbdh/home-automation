@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 #
@@ -36,7 +36,7 @@ BLUE_PIN = 24
 
 # Number of color changes per step (more is faster, less is slower).
 # You also can use 0.X floats.
-TRANSITIONSTEPS = 1
+TRANSITIONSTEPS = 5
 FADESTEPS = 1
 TRANSITIONFADETIME = 1
 MAXBRIGHT = 255
@@ -83,7 +83,7 @@ def setLights(pin, brightness):
     global gCurrent
     global bCurrent
 
-    realBrightness = brightness * (round(bright / 100))
+    realBrightness = round(brightness * (round(bright / 100)))
     pi.set_PWM_dutycycle(pin, realBrightness)
 
     if pin == RED_PIN:
@@ -113,6 +113,7 @@ def redTransition(r):
             time.sleep(rSteps)
     if rCurrent == r:
         print("RED DONE!")
+        pi.stop()
     else:
         print("RED ERROR!")
 
@@ -131,6 +132,7 @@ def greenTransition(g):
             time.sleep(gSteps)
     if gCurrent == g:
         print("GREEN DONE!")
+        pi.stop()
     else:
         print("GREEN ERROR!")
         
@@ -151,6 +153,7 @@ def blueTransition(b):
             time.sleep(bSteps)
     if bCurrent == b:
         print("BLUE DONE!")
+        pi.stop()
     else:
         print("BLUE ERROR!")
 
@@ -159,8 +162,8 @@ def doTransition(r, g, b):
     Thread(target=redTransition, args=(r,)).start()
     Thread(target=greenTransition, args=(g,)).start()
     Thread(target=blueTransition, args=(b,)).start()
-    # Thread(target=greenTransition, args=(g,)).join()
-    # Thread(target=blueTransition, args=(b,)).join()
+    Thread(target=greenTransition, args=(g,)).join()
+    Thread(target=blueTransition, args=(b,)).join()
 
 def updateColor(color, step):
     color += step
@@ -201,5 +204,3 @@ setLights(BLUE_PIN, 0)
 # print("%s %s %s" % (r, g, b))
 doTransition(r, g, b)
 time.sleep(2)
-
-pi.stop()
