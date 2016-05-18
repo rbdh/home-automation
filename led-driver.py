@@ -43,11 +43,11 @@ MAXBRIGHT = 255
 
 ###### END ######
 
-# import os
+import os
 import sys
-# import termios
-# import tty
-#import pigpio
+import termios
+import tty
+import pigpio
 import time
 from threading import Thread
 import json
@@ -74,7 +74,7 @@ else:
     b = int(sys.argv[3])
 
 
-# pi = pigpio.pi()
+pi = pigpio.pi()
 
 
 
@@ -84,7 +84,7 @@ def setLights(pin, brightness):
     global bCurrent
 
     realBrightness = brightness * (round(bright / 100))
-    # pi.set_PWM_dutycycle(pin, realBrightness)
+    pi.set_PWM_dutycycle(pin, realBrightness)
 
     if pin == RED_PIN:
         rCurrent = realBrightness
@@ -202,4 +202,4 @@ setLights(BLUE_PIN, 0)
 doTransition(r, g, b)
 time.sleep(2)
 
-#pi.stop()
+pi.stop()
