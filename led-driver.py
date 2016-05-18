@@ -165,7 +165,7 @@ def doTransition(r, g, b):
 def updateColor(color, step):
     color += step
     # test
-    # print("%s %s" % (color,step))
+    print("%s %s" % (color,step))
 
     if color > 255:
         return 255
