@@ -65,8 +65,8 @@ def loadSetting():
 
 
 if not len(sys.argv) < 1:
-    r = 255
-    g = 255
+    r = 50
+    g = 100
     b = 255
 else:
     r = int(sys.argv[1])
