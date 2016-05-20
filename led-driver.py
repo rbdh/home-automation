@@ -36,18 +36,17 @@ BLUE_PIN = 24
 
 # Number of color changes per step (more is faster, less is slower).
 # You also can use 0.X floats.
-TRANSITIONSTEPS = 5
+TRANSITIONSTEPS = 1
 FADESTEPS = 1
 TRANSITIONFADETIME = 1
 MAXBRIGHT = 255
-
 ###### END ######
 
-import os
+# import os
+# import termios
+# import tty
+# import pigpio
 import sys
-import termios
-import tty
-import pigpio
 import time
 from threading import Thread
 import json
@@ -55,127 +54,210 @@ from pprint import pprint
 
 def loadSetting():
     global state
-    global bright
+    global brightness
 
     with open("properties.json") as data_file:
         data = json.load(data_file)
         pprint(data)
         state = data["state"]
-        bright = data["brightness"]
+        brightness = data["brightness"]
 
-
+# run if no arguments
 if not len(sys.argv) < 1:
-    r = 50
-    g = 100
-    b = 255
+    r = 57
+    g = 152
+    b = 156
 else:
     r = int(sys.argv[1])
     g = int(sys.argv[2])
     b = int(sys.argv[3])
 
 
-pi = pigpio.pi()
+# pi = pigpio.pi()
+
+def getRealBrightness(brightnessLevel):
+    global realBrightness
+    realBrightness = (brightnessLevel * (round(brightness / 100)))
+    return realBrightness
 
 
-
-def setLights(pin, brightness):
+def setLights(pin, brightnessLevel):
     global rCurrent
     global gCurrent
     global bCurrent
+    global cCurrent
 
-    realBrightness = round(brightness * (round(bright / 100)))
-    pi.set_PWM_dutycycle(pin, realBrightness)
+    # pi.set_PWM_dutycycle(pin, getRealBrightness(brightnessLevel))
 
     if pin == RED_PIN:
-        rCurrent = realBrightness
+        rCurrent = getRealBrightness(brightnessLevel)
+        cCurrent = rCurrent
         print("Setting red to: %s" % rCurrent)
     elif pin == GREEN_PIN:
-        gCurrent = realBrightness
+        gCurrent = getRealBrightness(brightnessLevel)
+        cCurrent = gCurrent
         print("Setting green to: %s" % gCurrent)
     elif pin == BLUE_PIN:
-        bCurrent = realBrightness
+        bCurrent = getRealBrightness(brightnessLevel)
+        cCurrent = bCurrent
         print("Setting blue to: %s" % bCurrent)
     else:
-        print("No pin!")
+        print("No pin!: " + pin)
 
-def redTransition(r):
-    rDelta = 1 + abs(rCurrent - r)
-    rSteps = float(TRANSITIONFADETIME) / (float(rDelta) / float(1))
-    while rCurrent < r:
-        for i in range(0, rDelta):
-            rUpdate = updateColor(rCurrent, +TRANSITIONSTEPS)
-            setLights(RED_PIN, rUpdate)
-            time.sleep(rSteps)
-    while rCurrent > r:
-        for i in range(0, rDelta):
-            rUpdate = updateColor(rCurrent, -TRANSITIONSTEPS)
-            setLights(RED_PIN, rUpdate)
-            time.sleep(rSteps)
-    if rCurrent == r:
-        print("RED DONE!")
-        pi.stop()
+
+def Transition(color, value):
+    print("KLEUR: %s " % (color))
+    global PIN
+
+    if color == "red":
+        # print("rCurrent %s" % rCurrent)
+        PIN = RED_PIN
+    elif color == "green":
+        # print("gCurrent %s" % gCurrent)
+        PIN = GREEN_PIN
+    elif color == "blue":
+        # print("bCurrent %s" % bCurrent)
+        PIN = BLUE_PIN
     else:
-        print("RED ERROR!")
+        print("No valid color")
 
-def greenTransition(g):
-    gDelta = 1 + abs(gCurrent - g)
-    gSteps = float(TRANSITIONFADETIME) / (float(gDelta) / float(1))
-    while gCurrent < g:
-        for i in range(0, gDelta):
-            gUpdate = updateColor(gCurrent, +TRANSITIONSTEPS)
-            setLights(GREEN_PIN, gUpdate)
-            time.sleep(gSteps)
-    while gCurrent > g:
-        for i in range(0, gDelta):
-            gUpdate = updateColor(gCurrent, -TRANSITIONSTEPS)
-            setLights(GREEN_PIN, gUpdate)
-            time.sleep(gSteps)
-    if gCurrent == g:
-        print("GREEN DONE!")
-        pi.stop()
+    delta = abs(cCurrent - value)
+    if delta == 0:
+        print("Nothing to do for %s" % color)
     else:
-        print("GREEN ERROR!")
-        
-def blueTransition(b):
-    bDelta = 1 + abs(bCurrent - b)
-    bSteps = float(TRANSITIONFADETIME) / (float(bDelta) / float(1))
-    while bCurrent < b:
-        for i in range(0, bDelta):
-            bUpdate = updateColor(bCurrent, +TRANSITIONSTEPS)
-            setLights(BLUE_PIN, bUpdate)
-            print("%s %s %s" % (b, bSteps, bUpdate))
-            time.sleep(bSteps)
-    while bCurrent > b:
-        for i in range(0, bDelta):
-            bUpdate = updateColor(bCurrent, -TRANSITIONSTEPS)
-            setLights(BLUE_PIN, bUpdate)
-            print("%s %s %s" % (b, bSteps, bUpdate))
-            time.sleep(bSteps)
-    if bCurrent == b:
-        print("BLUE DONE!")
-        pi.stop()
-    else:
-        print("BLUE ERROR!")
+        steps = float(TRANSITIONFADETIME) / (float(delta) / float(TRANSITIONSTEPS))
+        print("Delta: %s , Steps %s" % (delta,  steps))
+        running(delta, steps, value)
 
 
-def doTransition(r, g, b):
-    Thread(target=redTransition, args=(r,)).start()
-    Thread(target=greenTransition, args=(g,)).start()
-    Thread(target=blueTransition, args=(b,)).start()
-    Thread(target=greenTransition, args=(g,)).join()
-    Thread(target=blueTransition, args=(b,)).join()
+def running(delta, steps, value):
+    while cCurrent < value:
+        for i in range(0, delta):
+            if cCurrent == value or cCurrent >= 255:
+                value = cCurrent
+                print("done!")
+                break
+                # pi.stop()
+            else:
+                cUpdate = updateColor(cCurrent, +TRANSITIONSTEPS)
+                setLights(PIN, cUpdate)
+                time.sleep(steps)
+    while cCurrent > value:
+        for i in range(0, delta):
+            if cCurrent == value or cCurrent >= 255:
+                value = cCurrent
+                break
+                print("done!")
+                # pi.stop()
+            else:
+                cUpdate = updateColor(cCurrent, -TRANSITIONSTEPS)
+                setLights(PIN, cUpdate)
+                time.sleep(steps)
 
-def updateColor(color, step):
-    color += step
-    # test
-    print("%s %s" % (color,step))
+# def redTransition(r):
+#     rDelta = 1 + abs(rCurrent - r)
+#     rSteps = float(TRANSITIONFADETIME) / (float(rDelta) / float(TRANSITIONSTEPS))
+#     print("rDelta: %s, rSteps %s" % (rDelta, rSteps))
+#     while rCurrent < r:
+#         for i in range(0, rDelta):
+#             if (rCurrent == r or rCurrent >= 255):
+#                 r = rCurrent
+#                 print("RED DONE!")
+#                 # pi.stop()
+#             else:
+#                 rUpdate = updateColor(rCurrent, +TRANSITIONSTEPS)
+#                 setLights(RED_PIN, rUpdate)
+#                 time.sleep(rSteps)
+#     while rCurrent > r:
+#         for i in range(0, rDelta):
+#             if (rCurrent == r or rCurrent >= 255):
+#                 r = rCurrent
+#                 print("RED DONE!")
+#                 # pi.stop()
+#             else:
+#                 rUpdate = updateColor(rCurrent, -TRANSITIONSTEPS)
+#                 setLights(RED_PIN, rUpdate)
+#                 time.sleep(rSteps)
+#     if (rCurrent == r or rCurrent >= 255):
+#         r = rCurrent
+#         print("RED DONE!")
+#         # pi.stop()
+#     else:
+#         print("RED ERROR!")
+#
+# def greenTransition(g):
+#     gDelta = 1 + abs(gCurrent - g)
+#     gSteps = float(TRANSITIONFADETIME) / (float(gDelta) / float(TRANSITIONSTEPS))
+#     while gCurrent < g:
+#         for i in range(0, gDelta):
+#             if (gCurrent == g or gCurrent >= 255):
+#                 g = gCurrent
+#                 print("GREEN DONE!")
+#                 # pi.stop()
+#             else:
+#                 gUpdate = updateColor(gCurrent, +TRANSITIONSTEPS)
+#                 setLights(GREEN_PIN, gUpdate)
+#                 time.sleep(gSteps)
+#     while gCurrent > g:
+#         for i in range(0, gDelta):
+#             if (gCurrent == g or gCurrent >= 255):
+#                 g = gCurrent
+#                 print("GREEN DONE!")
+#                 # pi.stop()
+#             else:
+#                 gUpdate = updateColor(gCurrent, -TRANSITIONSTEPS)
+#                 setLights(GREEN_PIN, gUpdate)
+#                 time.sleep(gSteps)
+#
+# def blueTransition(b):
+#     bDelta = 1 + abs(bCurrent - b)
+#     bSteps = float(TRANSITIONFADETIME) / (float(bDelta) / float(TRANSITIONSTEPS))
+#     while bCurrent < b:
+#         for i in range(0, bDelta):
+#             if (bCurrent == b or bCurrent >= 255):
+#                 b = bCurrent
+#                 print("BLUE DONE!")
+#                 # pi.stop()
+#             else:
+#                 bUpdate = updateColor(bCurrent, +TRANSITIONSTEPS)
+#                 setLights(BLUE_PIN, bUpdate)
+#                 # print("%s %s %s" % (b, bSteps, bUpdate))
+#                 time.sleep(bSteps)
+#
+#     while bCurrent > b:
+#         for i in range(0, bDelta):
+#             if (bCurrent == b or bCurrent >= 255):
+#                 b = bCurrent
+#                 print("BLUE DONE!")
+#                 # pi.stop()
+#             else:
+#                 bUpdate = updateColor(bCurrent, -TRANSITIONSTEPS)
+#                 setLights(BLUE_PIN, bUpdate)
+#                 # print("%s %s %s" % (b, bSteps, bUpdate))
+#                 time.sleep(bSteps)
 
-    if color > 255:
+
+def doTransition(redValue, greenValue, blueValue):
+    # Transition("red", r)
+    # Transition("green", g)
+    # Transition("blue", b)
+    Thread(target=Transition, args=("red", redValue,)).start()
+    Thread(target=Transition, args=("green", greenValue, )).start()
+    Thread(target=Transition, args=("blue", blueValue,)).start()
+    Thread(target=Transition, args=("green", greenValue,)).join()
+    Thread(target=Transition, args=("blue", blueValue,)).join()
+
+
+def updateColor(colorUpdate, step):
+    x = colorUpdate + step
+    print("Getting %s, doing %s" % (colorUpdate,step))
+    if x >= 255:
         return 255
-    if color < 0:
+    elif x <= 0:
         return 0
+    # print("colorUpdate: %s" % colorUpdate)
+    return x
 
-    return color
 
 
 def fadeColor(state):
@@ -196,11 +278,10 @@ def fadeColor(state):
         elif rCurrent == 0 and bCurrent == 0 and gCurrent == 0:
             setLights(RED_PIN, 255)
 
-
 loadSetting()
-setLights(RED_PIN, 0)
-setLights(GREEN_PIN, 0)
-setLights(BLUE_PIN, 0)
-# print("%s %s %s" % (r, g, b))
+setLights(RED_PIN, 150)
+setLights(GREEN_PIN, 150)
+setLights(BLUE_PIN, 150)
 doTransition(r, g, b)
+# fadeColor(True)
 time.sleep(2)
